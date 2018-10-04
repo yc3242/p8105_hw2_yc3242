@@ -77,7 +77,7 @@ To answer the questions 1.4. and 1.5., I reformatted data as below so that route
 ```{r reformat}
 reform_nyc_data = 
   nyc_data %>%
-  gather(key = "route", value = "route_name", route1:route11) %>% 
+  gather(key = "route", value = "route_name", route1:route11) %>%  # gather spreading route variables
   separate(route, into = c("remove", "route_number"), sep = 5) %>% 
   select(-remove)
 ```
@@ -118,36 +118,71 @@ library(readxl)
 
 I read and clean the Mr. Trash Wheel sheet as follows.
 
-```{r data import}
+```{r trash_import}
 trash_data = 
   read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
                      sheet = 1, range = cell_cols("A:N")) %>% 
-  janitor::clean_names() %>% 
-  filter(!is.na(dumpster)) %>% 
-  mutate(sports_balls = as.integer(round(sports_balls)))
+  janitor::clean_names() %>%                              # use reasonable variable names
+  filter(!is.na(dumpster)) %>%                            # omit NA data
+  mutate(sports_balls = as.integer(round(sports_balls)))  # round and convert sports_ball
 ```
+
+Before I look at the data in detail, I skimmed the data first. 
+
+```{r trash_skim}
+trash_data %>% skimr::skim()        
+```
+
+As a result, I found out that the number of month is **13**. Therefore, I used `distinct()` function to look at months variables. 
+
+```{r trash_distinct_month}
+trash_data %>% distinct(month)
+```
+
+As the 13th month, there was  a "Grand Total" month at the bottom line. I omitted this row so as not to be considered as one of the observations. 
+
+```{r}
+trash_data <- trash_data %>% filter(month != "Grand Total")
+```
+
+* The **number of observations** is `r nrow(trash_data)`.
+* I think the **key variables** are `month` and `year` since in general, we can analyze the total amount of trash or each kind of trash by them.
+* The **median** number of sports balls in a dumpster in 2016 is `r trash_data %>% filter(year == 2016) %>% summarise(median(sports_balls))`.
 
 ### Precipiation data
 
 I read and clean precipitation data for 2016.
 
-```{r}
+```{r precip_2016_import}
 precip_2016 = 
   read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
                      sheet = 4, skip = 1) %>% 
-  janitor::clean_names() %>%
-  filter(!is.na(month) & !is.na(total)) %>% 
-  mutate(year = 2016)
+  janitor::clean_names() %>%    
+  rename(total_precip = total) %>%                    # use reasonable variable names
+  filter(!is.na(month) & !is.na(total_precip)) %>%    # omit NA data
+  mutate(year = 2016)                                 # add a variable year
 ```
 
 Next, I read and clean precipitation data for 2017.
 
-```{r}
+```{r precip_2017_import}
 precip_2017 = 
   read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
                      sheet = 3, skip = 1) %>% 
-  janitor::clean_names() %>%
-  filter(!is.na(month) & !is.na(total)) %>% 
-  mutate(year = 2017)
+  janitor::clean_names() %>% 
+  rename(total_precip = total) %>%                  # use reasonable variable names
+  filter(!is.na(month) & !is.na(total_precip)) %>%  # omit NA data
+  mutate(year = 2017)                               # add a variable year
 ```
+
+And then, I combined these datasets and converted month to a character variable.
+
+```{r precip_combine}
+precip_data = bind_rows(precip_2016, precip_2017) %>% 
+              mutate(month = month.name[month])
+```
+
+* The **number of observations** is `r nrow(precip_data)`.
+* In this case, `month` and `year` can be considered as **key variables** since, for example, we can see the trends of precipitation by month and compare the amount of precipitation in years.
+* The **total precipitation in 2017** is `r sum(precip_2017$total_precip)`(in).
 
