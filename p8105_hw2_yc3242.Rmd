@@ -120,29 +120,11 @@ I read and clean the Mr. Trash Wheel sheet as follows.
 
 ```{r trash_import}
 trash_data = 
-  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
+  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2018-7-28.xlsx",
                      sheet = 1, range = cell_cols("A:N")) %>% 
   janitor::clean_names() %>%                              # use reasonable variable names
   filter(!is.na(dumpster)) %>%                            # omit NA data
   mutate(sports_balls = as.integer(round(sports_balls)))  # round and convert sports_ball
-```
-
-Before I look at the data in detail, I skimmed the data first. 
-
-```{r trash_skim}
-trash_data %>% skimr::skim()        
-```
-
-As a result, I found out that the number of month is **13**. Therefore, I used `distinct()` function to look at months variables. 
-
-```{r trash_distinct_month}
-trash_data %>% distinct(month)
-```
-
-As the 13th month, there was  a "Grand Total" month at the bottom line. I omitted this row so as not to be considered as one of the observations. 
-
-```{r}
-trash_data <- trash_data %>% filter(month != "Grand Total")
 ```
 
 * The **number of observations** is `r nrow(trash_data)`.
@@ -155,8 +137,8 @@ I read and clean precipitation data for 2016.
 
 ```{r precip_2016_import}
 precip_2016 = 
-  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
-                     sheet = 4, skip = 1) %>% 
+  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2018-7-28.xlsx",
+                     sheet = 5, skip = 1) %>% 
   janitor::clean_names() %>%    
   rename(total_precip = total) %>%                    # use reasonable variable names
   filter(!is.na(month) & !is.na(total_precip)) %>%    # omit NA data
@@ -167,8 +149,8 @@ Next, I read and clean precipitation data for 2017.
 
 ```{r precip_2017_import}
 precip_2017 = 
-  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
-                     sheet = 3, skip = 1) %>% 
+  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2018-7-28.xlsx",
+                     sheet = 4, skip = 1) %>% 
   janitor::clean_names() %>% 
   rename(total_precip = total) %>%                  # use reasonable variable names
   filter(!is.na(month) & !is.na(total_precip)) %>%  # omit NA data
