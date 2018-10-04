@@ -127,9 +127,10 @@ trash_data =
   mutate(sports_balls = as.integer(round(sports_balls)))  # round and convert sports_ball
 ```
 
-* The **number of observations** is `r nrow(trash_data)`.
+* The **number of observations** is **`r nrow(trash_data)`**.
 * I think the **key variables** are `month` and `year` since in general, we can analyze the total amount of trash or each kind of trash by them.
-* The **median** number of sports balls in a dumpster in 2016 is `r trash_data %>% filter(year == 2016) %>% summarise(median(sports_balls))`.
+* The **median** number of sports balls in a dumpster in 2016 is **`r trash_data %>% filter(year == 2016) %>% summarise(median(sports_balls))`**.
+
 
 ### Precipiation data
 
@@ -164,7 +165,32 @@ precip_data = bind_rows(precip_2016, precip_2017) %>%
               mutate(month = month.name[month])
 ```
 
-* The **number of observations** is `r nrow(precip_data)`.
+* The **number of observations** is **`r nrow(precip_data)`**.
 * In this case, `month` and `year` can be considered as **key variables** since, for example, we can see the trends of precipitation by month and compare the amount of precipitation in years.
-* The **total precipitation in 2017** is `r sum(precip_2017$total_precip)`(in).
+* The **total precipitation in 2017** is **`r sum(precip_2017$total_precip)`(in)**.
+
+
+# Problem 3
+
+First, I loaded the dataset for problem 3 from the library.
+
+```{r brfss_import}
+library(p8105.datasets)
+data("brfss_smart2010")
+```
+
+Next, I cleaned the data and focused on the `Overall Health` topic and excluded some variables and added a new variable showing the proportion of responses that were "Excellent" or "Very Good".
+
+```{r}
+brfss_data = brfss_smart2010 %>% 
+  janitor::clean_names() %>%                          # clean variable names
+  filter(topic == "Overall Health") %>%               # focus on the "Overall Health" topic
+  select(-c(class, topic, question, sample_size, 
+            confidence_limit_low:geo_location)) %>%   # exclude variables
+  spread(key = response, value = data_value) %>%      # redefine columns
+  janitor::clean_names() %>%                          # clean variable names for new columns
+  mutate(exc_vg_prop = (excellent + very_good) /   
+           rowSums(select(., excellent:very_good))) %>%  # create proportion variable
+  select(year:excellent, very_good, good, fair, poor, exc_vg_prop) # reorder columns
+```
 
