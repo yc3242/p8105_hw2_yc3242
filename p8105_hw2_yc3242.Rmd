@@ -9,7 +9,6 @@ I used the tidyverse library through the whole problem set.
 
 ```{r}
 library(tidyverse)
-library(dplyr)
 ```
 
 
@@ -17,7 +16,7 @@ library(dplyr)
 
 First, I loaded and cleaned dataset for problem 1. 
 
-```{r}
+```{r data import}
 nyc_data = 
   read_csv(file = "./hw2_data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>% 
   janitor::clean_names() %>% 
@@ -25,5 +24,49 @@ nyc_data =
   mutate(entry = recode(entry, "YES" = TRUE, "NO" = FALSE))
 ```
 
+This NYC Transit data (`nyc_data`) is composed of *line, station name, its latitude and longitude, routes it serves, entrance type, whether or not you can enter the station, presence of ticket vending machine*, and *ADA compliance*. These variables were selected from `NYC_Transit_Subway_Entrance_And_Exit_Data.csv` original dataset which was followed by `clean_names()` function in the janitor library. After selecting variables process, `entry` variable was converted from character variable to logical variable. The size of the NYC Transit data is `r nrow(nyc_data)` rows and `r ncol(nyc_data)` columns. These data are not tidy because there are many duplicated rows. 
 
-Write a short paragraph about this dataset – explain briefly what variables the dataset contains, describe your data cleaning steps so far, and give the dimension (rows x columns) of the resulting dataset. Are these data tidy?
+To remove duplicated rows, I used `distinct()` function as below:
+
+```{r}
+nyc_data = distinct(nyc_data)
+```
+
+The **size** of the NYC Transit data is now `r nrow(nyc_data)` rows and `r ncol(nyc_data)` columns.
+
+### Questions
+
+(1) How many distinct stations are there? 
+
+```{r distinct_stations, eval = FALSE}
+nyc_data %>% 
+  distinct(nyc_data, line, station_name, .keep_all = TRUE) %>% 
+  count()
+```
+
+There are **465** distinct stations.
+
+(2) How many stations are ADA compliant?
+
+```{r ada, eval = FALSE}
+nyc_data %>% 
+  distinct(nyc_data, line, station_name, .keep_all = TRUE) %>% 
+  filter(ada == TRUE) %>% 
+  count(ada)
+```
+
+There are **84** ADA compliant stations.
+
+(3) What proportion of station entrances / exits without vending allow entrance?
+
+```{r proportion, eval = FALSE}
+nyc_data %>% 
+  filter(vending == "NO") %>% 
+  summarise(mean(entry == TRUE))
+```
+
+The proportion of station entrances / exits without vending allow entrance is **0.385**.
+
+Reformat data so that route number and route name are distinct variables. How many distinct stations serve the A train? Of the stations that serve the A train, how many are ADA compliant?
+
+
