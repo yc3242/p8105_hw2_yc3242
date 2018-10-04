@@ -105,4 +105,49 @@ reform_nyc_data %>%
 There are **17** ADA compliant distinct stations serve A train.
 
 
+# Problem 2
+
+I I used the readxl library to read `xlsx` file for problem 2. 
+
+```{r}
+library(readxl)
+```
+
+
+### Mr. Trash Wheel
+
+I read and clean the Mr. Trash Wheel sheet as follows.
+
+```{r data import}
+trash_data = 
+  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
+                     sheet = 1, range = cell_cols("A:N")) %>% 
+  janitor::clean_names() %>% 
+  filter(!is.na(dumpster)) %>% 
+  mutate(sports_balls = as.integer(round(sports_balls)))
+```
+
+### Precipiation data
+
+I read and clean precipitation data for 2016.
+
+```{r}
+precip_2016 = 
+  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
+                     sheet = 4, skip = 1) %>% 
+  janitor::clean_names() %>%
+  filter(!is.na(month) & !is.na(total)) %>% 
+  mutate(year = 2016)
+```
+
+Next, I read and clean precipitation data for 2017.
+
+```{r}
+precip_2017 = 
+  read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2017-9-26.xlsx",
+                     sheet = 3, skip = 1) %>% 
+  janitor::clean_names() %>%
+  filter(!is.na(month) & !is.na(total)) %>% 
+  mutate(year = 2017)
+```
 
