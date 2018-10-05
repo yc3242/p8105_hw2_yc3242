@@ -21,12 +21,12 @@ nyc_data =
   read_csv(file = "./hw2_data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>% 
   janitor::clean_names() %>% 
   select(line:entry, vending, ada) %>% 
-  mutate(entry = recode(entry, "YES" = TRUE, "NO" = FALSE))
+  mutate(entry = recode(entry, "YES" = TRUE, "NO" = FALSE))    # character to logical
 ```
 
-This NYC Transit data (`nyc_data`) is composed of *line, station name, its latitude and longitude, routes it serves, entrance type, whether or not you can enter the station, presence of ticket vending machine*, and *ADA compliance*. These variables were selected from `NYC_Transit_Subway_Entrance_And_Exit_Data.csv` original dataset which was followed by `clean_names()` function in the janitor library. After selecting variables process, `entry` variable was converted from character variable to logical variable. The **size** of the NYC Transit data is **`r nrow(nyc_data)` rows** and **`r ncol(nyc_data)`** columns. These data are not tidy because columns are values not variables and there are many duplicated rows. 
+This NYC Transit data (`nyc_data`) is composed of *line, station name, its latitude and longitude, routes it serves, entrance type, whether or not you can enter the station, presence of ticket vending machine*, and *ADA compliance*. These variables were selected from `NYC_Transit_Subway_Entrance_And_Exit_Data.csv` original dataset which was followed by cleaning up column names. After selecting variables process, `entry` variable was converted from character variable to logical variable. The **size** of the NYC Transit data is **`r nrow(nyc_data)`** rows and **`r ncol(nyc_data)`** columns. These data are not tidy because columns are values not variables and there are many duplicated rows. 
 
-To remove duplicated rows, I used `distinct()` function as below:
+To preserve one distinct row from duplicated rows, I used `distinct()` function as below:
 
 ```{r}
 nyc_data = distinct(nyc_data)
@@ -37,6 +37,8 @@ The **size** of the NYC Transit data is now **`r nrow(nyc_data)`** rows and **`r
 ### Questions
 
 **1.1. How many distinct stations are there?**
+
+The stations are identified both by name and by name. 
 
 ```{r distinct_stations}
 nyc_data %>% 
@@ -61,6 +63,7 @@ There are **84** ADA compliant stations.
 
 **1.3. What proportion of station entrances / exits without vending allow entrance?**
 
+Since the type of `entry` variable is `r typeof(nyc_data$entry)`, I calculated the mean of `entry` variable to get the proportion of `TRUE`s, after filtering a vending condition `NO`.  
 ```{r proportion}
 nyc_data %>% 
   filter(vending == "NO") %>% 
@@ -77,7 +80,7 @@ To answer the questions 1.4. and 1.5., I reformatted data as below so that route
 ```{r reformat}
 reform_nyc_data = 
   nyc_data %>%
-  gather(key = "route", value = "route_name", route1:route11) %>%  # gather spreading route variables
+  gather(key = "route", value = "route_name", route1:route11) %>%     # wide to long
   separate(route, into = c("remove", "route_number"), sep = 5) %>% 
   select(-remove)
 ```
@@ -108,7 +111,7 @@ There are **17** ADA compliant distinct stations serve A train.
 
 # Problem 2
 
-I I used the readxl library to read `xlsx` file for problem 2. 
+I used the readxl library to read .xlsx file for problem 2. 
 
 ```{r}
 library(readxl)
@@ -123,17 +126,19 @@ I read and clean the Mr. Trash Wheel sheet as follows.
 trash_data = 
   read_excel(path = "./hw2_data/HealthyHarborWaterWheelTotals2018-7-28.xlsx",
                      sheet = 1, range = cell_cols("A:N")) %>% 
-  janitor::clean_names() %>%                              # use reasonable variable names
+  janitor::clean_names() %>%                              # clean up col names
+  rename(weight = weight_tons, 
+         volume = volume_cubic_yards) %>%                 # remove units from col names
   filter(!is.na(dumpster)) %>%                            # omit NA data
-  mutate(sports_balls = as.integer(round(sports_balls)))  # round and convert sports_ball
+  mutate(sports_balls = as.integer(round(sports_balls)))  # convert to integer
 ```
 
 * The **number of observations** is **`r nrow(trash_data)`**.
-* I think the **key variables** are `month` and `year` since in general, we can analyze the total amount of trash or each kind of trash by them.
+* I think the **key variables** are `weight` and `volume` of trash and various `kinds` of trash. For example, the total weight(tons) of trash during 2016 is **`r trash_data %>% filter(year == 2016) %>% summarise(sum(weight))`** and total volume(cubic yards) of trash during 2017 **`r trash_data %>% filter(year == 2017) %>% summarise(sum(volume))`**. Also, the average of amount of plastic bottles during 2017 is **`r trash_data %>% filter(year == 2017) %>% summarise(round(mean(plastic_bottles), 1))`**
 * The **median** number of sports balls in a dumpster in 2016 is **`r trash_data %>% filter(year == 2016) %>% summarise(median(sports_balls))`**.
 
 
-### Precipiation data
+### Precipiation 
 
 I read and clean precipitation data for 2016.
 
@@ -162,18 +167,18 @@ precip_2017 =
 And then, I combined these datasets and converted month to a character variable.
 
 ```{r precip_combine}
-precip_data = bind_rows(precip_2016, precip_2017) %>% 
-              mutate(month = month.name[month])
+precip_data = bind_rows(precip_2016, precip_2017) %>%   
+              mutate(month = month.name[month])        # convert to character 
 ```
 
 * The **number of observations** is **`r nrow(precip_data)`**.
-* In this case, `month` and `year` can be considered as **key variables** since, for example, we can see the trends of precipitation by month and compare the amount of precipitation in years.
+* In this case, `total precipiation` can be considered as **key variables**. For example, the maximum amount of total precipitation per month in 2016 is **`r precip_data %>% filter(year == 2016) %>% summarise(max(total_precip))`**(in).
 * The **total precipitation** in 2017 is **`r sum(precip_2017$total_precip)`**(in).
 
 
 # Problem 3
 
-First, I loaded the dataset for problem 3 from the library.
+First, I loaded the dataset for problem 3 from the following library.
 
 ```{r brfss_import}
 library(p8105.datasets)
@@ -204,7 +209,7 @@ There are **`r brfss_data %>% distinct(locationdesc) %>% count()`** unique locat
 
 **3.2. Is every state represented?**
 
-**Yes**. Because **`r brfss_data %>% distinct(locationabbr) %>% count()`** states including DC is represented. 
+**Yes**, given that **`r brfss_data %>% distinct(locationabbr) %>% count()`** states including DC are represented. 
 
 **3.3. What state is observed the most?**
 
@@ -212,7 +217,7 @@ There are **`r brfss_data %>% distinct(locationdesc) %>% count()`** unique locat
 brfss_data %>% count(locationabbr) %>% arrange(desc(n))
 ```
 
-**`NJ`** is observed the most. 
+**NJ** is observed the most. 
 
 **3.4. In 2002, what is the median of the “Excellent” response value?**
 
@@ -264,7 +269,8 @@ brfss_data %>%
   labs(
     x = "year",
     y = "Proportion of Excellent response",
-    title = "Proportion of Excellent response values in 2002 - 2010"
+    title = "Proportion of Excellent response values in 2002 - 2010",
+    caption = "Data from brfss_smart2010"
   )
 ```
 
